@@ -76,17 +76,15 @@
     <!-- Modals -->
     <div id="welcome-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Welcome to Assistant</h3>
-            <p>Please set your API keys in the settings menu (⚙️) to begin.</p>
-            <button id="close-welcome-btn">Got it</button>
+            <h3>Welcome to Comet Assistant</h3>
+            <p>Powered by Google Gemini AI. Start chatting now!</p>
+            <button id="close-welcome-btn">Get Started</button>
         </div>
     </div>
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <h3>Settings</h3>
-            <input type="password" id="openai-key-input" placeholder="OpenAI Key (sk-...)">
-            <input type="password" id="gemini-key-input" placeholder="Google Gemini Key">
-            <button id="save-api-key-btn">Save Keys</button>
+            <p style="font-size: 14px; color: var(--text-secondary);">Powered by Google Gemini</p>
             <button id="clear-history-btn" style="background-color: #aa4a44;">Clear History</button>
             <button id="close-settings-btn">Close</button>
         </div>
@@ -140,7 +138,7 @@
         // DOM Elements
         const textInput = document.getElementById('text-input'), micButton = document.getElementById('mic-button'), attachmentButton = document.getElementById('attachment-button');
         const msgContainer = document.getElementById('message-container'), chatWindow = document.getElementById('chat-window'), vizPlaceholder = document.getElementById('visualizer-placeholder'), emptyPlaceholder = document.getElementById('empty-chat-placeholder'), thinkingIndicator = document.getElementById('thinking-indicator');
-        const settingsModal = document.getElementById('settings-modal'), openaiKeyInput = document.getElementById('openai-key-input'), geminiKeyInput = document.getElementById('gemini-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn'), closeSettingsBtn = document.getElementById('close-settings-btn'), welcomeModal = document.getElementById('welcome-modal'), closeWelcomeBtn = document.getElementById('close-welcome-btn'), clearHistoryBtn = document.getElementById('clear-history-btn');
+        const settingsModal = document.getElementById('settings-modal'), closeSettingsBtn = document.getElementById('close-settings-btn'), welcomeModal = document.getElementById('welcome-modal'), closeWelcomeBtn = document.getElementById('close-welcome-btn'), clearHistoryBtn = document.getElementById('clear-history-btn');
         const visionChoiceModal = document.getElementById('vision-choice-modal'), takePhotoBtn = document.getElementById('take-photo-btn'), uploadFileBtn = document.getElementById('upload-file-btn'), closeVisionChoiceBtn = document.getElementById('close-vision-choice-btn'), fileUploadInput = document.getElementById('file-upload-input');
         const cameraModal = document.getElementById('camera-modal'), cameraView = document.getElementById('camera-view'), captureBtn = document.getElementById('capture-btn'), closeCameraBtn = document.getElementById('close-camera-btn');
         const toneIcon = document.getElementById('tone-icon'), toneModal = document.getElementById('tone-modal'), toneButtons = document.querySelectorAll('.tone-btn'), closeToneModalBtn = document.getElementById('close-tone-modal-btn');
@@ -148,7 +146,6 @@
 
         // State
         let mediaRecorder, audioChunks = [], conversationHistory = [], cameraStream;
-        let openaiApiKey = localStorage.getItem('openai_api_key'), geminiApiKey = localStorage.getItem('gemini_api_key');
         let currentTone = localStorage.getItem('assistant_tone') || 'friendly';
         let currentTheme = localStorage.getItem('assistant_theme') || 'light';
         
@@ -159,20 +156,22 @@
             themeToggleIcon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
             // Tone
             updateToneUI();
-            // API Keys
-            if (!openaiApiKey || !geminiApiKey) { welcomeModal.classList.remove('hidden'); }
+            // Show welcome message on first visit (optional - text chat works without keys)
+            if (!localStorage.getItem('welcome_shown')) {
+                welcomeModal.classList.remove('hidden');
+                localStorage.setItem('welcome_shown', 'true');
+            }
         }
 
         // --- Event Listeners ---
         // Header Icons
         newChatIcon.onclick = startNewChat;
-        settingsIcon.onclick = openSettings;
+        settingsIcon.onclick = () => settingsModal.classList.remove('hidden');
         themeToggleIcon.onclick = toggleTheme;
         toneIcon.onclick = () => toneModal.classList.remove('hidden');
         
         // Modals
         closeWelcomeBtn.onclick = () => welcomeModal.classList.add('hidden');
-        saveApiKeyBtn.onclick = saveApiKeys;
         closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
         clearHistoryBtn.onclick = () => { if (confirm('Are you sure you want to clear the conversation?')) { startNewChat(); settingsModal.classList.add('hidden'); }};
         closeToneModalBtn.onclick = () => toneModal.classList.add('hidden');
@@ -180,7 +179,7 @@
         
         // Input Bar
         textInput.onkeydown = e => { if (e.key === 'Enter' && textInput.value.trim()) { processChat({ text: textInput.value.trim() }); textInput.value = ''; } };
-        micButton.onclick = () => { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); else startRecording(); };
+        micButton.onclick = () => { alert('Voice input coming soon!'); };
         
         // Vision Flow
         attachmentButton.onclick = () => visionChoiceModal.classList.remove('hidden');
@@ -193,18 +192,6 @@
         
         // --- Feature Functions ---
         function startNewChat() { conversationHistory = []; msgContainer.innerHTML = ''; emptyPlaceholder.style.display = 'flex'; }
-        
-        function openSettings() {
-            openaiKeyInput.value = openaiApiKey || '';
-            geminiKeyInput.value = geminiApiKey || '';
-            settingsModal.classList.remove('hidden');
-        }
-
-        function saveApiKeys() {
-            const oaiKey = openaiKeyInput.value.trim(); const gemKey = geminiKeyInput.value.trim();
-            if (oaiKey && gemKey) { localStorage.setItem('openai_api_key', oaiKey); localStorage.setItem('gemini_api_key', gemKey); openaiApiKey = oaiKey; geminiApiKey = gemKey; settingsModal.classList.add('hidden'); } 
-            else { alert("Please enter both API keys."); }
-        }
 
         function toggleTheme() {
             currentTheme = document.body.classList.toggle('dark-mode') ? 'dark' : 'light';
@@ -219,45 +206,37 @@
         }
 
         async function processChat(data) {
-            if (!openaiApiKey || !geminiApiKey) { alert("Please set API keys in Settings."); return; }
             emptyPlaceholder.style.display = 'none';
             if (data.text) addMessage(data.text, 'user');
             thinkingIndicator.style.display = 'flex';
             const formData = new FormData();
-            formData.append('apiKey', openaiApiKey);
             formData.append('conversationHistory', JSON.stringify(conversationHistory));
             formData.append('tone', currentTone);
-            if (data.audioBlob) formData.append('audio', data.audioBlob);
             if (data.text) formData.append('text', data.text);
             try {
                 const res = await fetch('/process-chat', { method: 'POST', body: formData });
                 if (!res.ok) throw new Error(`Server error: ${res.statusText}`);
                 const result = await res.json();
-                if (data.audioBlob) addMessage(result.user_prompt, 'user');
+                if (result.error) throw new Error(result.error);
                 conversationHistory.push({ role: 'user', content: result.user_prompt }, { role: 'assistant', content: result.assistant_response });
                 addMessage(result.assistant_response, 'assistant');
-                playAudioWithVisualizer(result.assistant_audio_b64);
             } catch (err) { addMessage(`Error: ${err.message}`, 'assistant'); }
             finally { thinkingIndicator.style.display = 'none'; }
         }
         
         async function processVision(file) {
-            if (!openaiApiKey || !geminiApiKey) { alert("Please set API keys in Settings."); return; }
             emptyPlaceholder.style.display = 'none';
             addMessage({ file }, 'user');
             thinkingIndicator.style.display = 'flex';
             const formData = new FormData();
-            formData.append('openaiApiKey', openaiApiKey);
-            formData.append('geminiApiKey', geminiApiKey);
             formData.append('file', file);
             formData.append('tone', currentTone);
             try {
                 const res = await fetch('/process-vision', { method: 'POST', body: formData });
                 if (!res.ok) { const errorData = await res.json(); throw new Error(errorData.error || `Server error: ${res.statusText}`); }
                 const result = await res.json();
-                conversationHistory.push({ role: 'user', content: `[Sent a file]` }, { role: 'assistant', content: result.assistant_response });
+                conversationHistory.push({ role: 'user', content: `[Sent an image]` }, { role: 'assistant', content: result.assistant_response });
                 addMessage(result.assistant_response, 'assistant');
-                playAudioWithVisualizer(result.assistant_audio_b64);
             } catch (err) { addMessage(`Vision Error: ${err.message}`, 'assistant'); }
             finally { thinkingIndicator.style.display = 'none'; }
         }
