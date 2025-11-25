@@ -1,5 +1,6 @@
 # Simple Gemini Chat App
 import google.generativeai as genai
+from google.generativeai.types import RequestOptions
 from flask import Flask, render_template, request, jsonify
 import json
 import os
@@ -62,7 +63,7 @@ def process_chat():
                 temperature=0.7,
                 max_output_tokens=2048,
             ),
-            request_options={"timeout": REQUEST_TIMEOUT}
+            request_options=RequestOptions(timeout=REQUEST_TIMEOUT)
         )
         
         # Handle response - check if there's text
@@ -116,7 +117,7 @@ def process_vision():
                 temperature=0.7,
                 max_output_tokens=2048,
             ),
-            request_options={"timeout": REQUEST_TIMEOUT}
+            request_options=RequestOptions(timeout=REQUEST_TIMEOUT)
         )
         
         # Handle response
