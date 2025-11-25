@@ -55,6 +55,7 @@
         .modal-content input { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--text-input-bg); color: var(--text-primary); }
         .modal-content button { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 15px; cursor: pointer; }
         .modal-content .choice-btn { margin: 5px; }
+        #upload-file-btn { background: var(--app-bg); color: var(--primary-color); border: 2px solid var(--primary-color); }
         .modal-content .tone-btn { display: inline-block; width: 120px; text-align: center; margin: 5px; cursor: pointer; background: var(--text-input-bg); padding: 10px; border-radius: 8px; border: 2px solid transparent; transition: border-color 0.2s, background-color 0.2s; }
         .modal-content .tone-btn.selected { border-color: var(--primary-color); background: var(--primary-color-light); }
         .tone-btn .emoji { font-size: 28px; } .tone-btn .label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
@@ -89,8 +90,6 @@
             <button id="close-settings-btn">Close</button>
         </div>
     </div>
-    <div id="vision-choice-modal" class="modal hidden"> <!-- ... unchanged ... --> </div>
-    <div id="camera-modal" class="modal hidden"> <!-- ... unchanged ... --> </div>
     <div id="tone-modal" class="modal hidden">
         <div class="modal-content">
             <h3>Choose a Tone</h3>
