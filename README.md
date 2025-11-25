@@ -1,6 +1,6 @@
 # Comet Assistant 🌐
 
-A simple AI chat assistant powered by **Google Gemini**. Ready to use immediately - no API keys needed!
+A simple AI chat assistant powered by **Google Gemini**. Ready to use immediately with a working API key!
 
 ## ✨ Features
 
@@ -9,7 +9,7 @@ A simple AI chat assistant powered by **Google Gemini**. Ready to use immediatel
 - **📸 Vision Analysis**: Upload and analyze images using Gemini vision
 - **🌙 Dark/Light Theme**: Toggle between dark and light modes
 - **📝 Conversation History**: Maintains context throughout your chat session
-- **� Camera Capture**: Take photos for analysis
+- **📷 Camera Capture**: Take photos for analysis
 
 ## 🚀 Quick Start
 
@@ -30,19 +30,31 @@ Navigate to: **http://localhost:5001**
 
 **That's it!** Start chatting immediately 🎉
 
+## 🔑 API Key
+
+The app comes with a pre-configured Gemini API key. If you need to use your own:
+
+1. Get a free API key from: https://aistudio.google.com/app/apikey
+2. Set it as an environment variable:
+   ```bash
+   export GEMINI_API_KEY=your_api_key_here
+   python app.py
+   ```
+   Or edit `app.py` directly and replace the API key.
+
 ## 📋 What Works
 
-✅ **Text Chat** - Powered by Google Gemini  
+✅ **Text Chat** - Powered by Google Gemini (gemini-1.5-flash)  
 ✅ **Image Analysis** - Gemini vision capabilities  
 ✅ **4 Tone Modes** - Friendly, Professional, Creative, Concise  
 ✅ **Theme Switching** - Light and dark modes  
 ✅ **Conversation History** - Maintains context  
 ✅ **Camera Capture** - Take photos for analysis  
 
-## ️ Tech Stack
+## ⚙️ Tech Stack
 
 - **Backend**: Python Flask
-- **AI**: Google Gemini API
+- **AI**: Google Gemini API (gemini-1.5-flash)
 - **Frontend**: Vanilla JavaScript + HTML/CSS
 - **Styling**: Custom CSS with dark mode support
 
@@ -61,14 +73,10 @@ The app uses Google Gemini API with a hardcoded API key, so you don't need to se
 ## 🎯 Features
 
 - **No Setup**: Works immediately
-- **Free to Use**: No API costs for users
+- **Free to Use**: No API costs for users (Gemini has generous free tier)
 - **Vision Support**: Analyze images with Gemini
 - **Context Aware**: Remembers conversation history
 - **Multiple Tones**: Adapt AI personality
-
-## 📄 License
-
-MIT License
 
 ## 💡 Usage Tips
 
@@ -78,9 +86,12 @@ MIT License
 4. **Toggle theme**: Click the ☀️/🌙 icon
 5. **Clear history**: Open settings (⚙️) and click "Clear History"
 
-## 🎯 Powered By
+## 🔧 Troubleshooting
 
-This app uses the [Bytez API](https://bytez.com/) to access GPT-4o without requiring users to have their own OpenAI API keys.
+If you get errors like "INTERNAL SERVER ERROR":
+1. Check your internet connection
+2. Verify the API key is valid (get one from https://aistudio.google.com/app/apikey)
+3. Make sure the `gemini-1.5-flash` model is available in your region
 
 ## 📄 License
 
@@ -92,4 +103,4 @@ Contributions, issues, and feature requests are welcome!
 
 ---
 
-Made with ❤️ using Bytez API
+Made with ❤️ using Google Gemini API
