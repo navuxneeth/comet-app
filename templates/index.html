@@ -32,6 +32,7 @@
         .input-bar { border-top: 1px solid var(--border-color); padding: 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; transition: border-color 0.3s; }
         #text-input { flex: 1; padding: 12px 16px; border: none; outline: none; border-radius: 22px; background: var(--text-input-bg); font-size: 15px; color: var(--text-primary); transition: background-color 0.3s; }
         .icon-button { border: none; background: var(--primary-color); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; }
+        #attachment-button { background: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); font-size: 28px; font-weight: 300; }
         
         /* --- CHAT BUBBLES & INDICATORS --- */
         #empty-chat-placeholder { flex-grow: 1; display: flex; justify-content: center; align-items: center; font-size: 45px; color: #d0e0f0; opacity: 0.8; transition: color 0.3s; }
@@ -55,9 +56,9 @@
         .modal-content input { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--text-input-bg); color: var(--text-primary); }
         .modal-content button { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 15px; cursor: pointer; }
         .modal-content .choice-btn { margin: 5px; }
-        #upload-file-btn { background: var(--app-bg); color: var(--primary-color); border: 2px solid var(--primary-color); }
         .modal-content .tone-btn { display: inline-block; width: 120px; text-align: center; margin: 5px; cursor: pointer; background: var(--text-input-bg); padding: 10px; border-radius: 8px; border: 2px solid transparent; transition: border-color 0.2s, background-color 0.2s; }
         .modal-content .tone-btn.selected { border-color: var(--primary-color); background: var(--primary-color-light); }
+        body.dark-mode .modal-content .tone-btn.selected { background: rgb(11, 11, 11); }
         .tone-btn .emoji { font-size: 28px; } .tone-btn .label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
         .tone-btn .description { font-size: 11px; color: var(--text-secondary); margin-top: 4px; height: 30px; }
         #camera-view { max-width: 100%; border-radius: 8px; }
@@ -127,7 +128,7 @@
         </div>
         <div class="input-bar">
             <input type="text" id="text-input" placeholder="Ask anything..." />
-            <button id="attachment-button" class="icon-button">📎</button>
+            <button id="attachment-button" class="icon-button">+</button>
             <button id="mic-button" class="icon-button">🎤</button>
         </div>
     </div>
