@@ -15,23 +15,21 @@ I completely rewrote the app from scratch to use **Google Gemini API** only.
 
 **Your Gemini API Key (hardcoded):**
 ```
-AIzaSyCnIzEvA2p1NBicc2rb_drzIr2k1M-6HkQ
+AIzaSyD6RTduliVvqtOmJP04dEH2h2LqhvnHxGE
 ```
 
 ## New Code Structure
 
-### Backend (`app.py`) - 95 lines total
+### Backend (`app.py`) - ~130 lines total
 ```python
 # Simple and clean
 import google.generativeai as genai
 
-GEMINI_API_KEY = "AIzaSyCnIzEvA2p1NBicc2rb_drzIr2k1M-6HkQ"
+GEMINI_API_KEY = "AIzaSyD6RTduliVvqtOmJP04dEH2h2LqhvnHxGE"
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Text chat
-model = genai.GenerativeModel('gemini-pro')
-
-# Vision (images)
+# Text chat and Vision (both use gemini-1.5-flash)
+model = genai.GenerativeModel('gemini-1.5-flash')
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 ```
 
@@ -50,7 +48,7 @@ User types message
     ↓
 Build conversation context with tone
     ↓
-Send to Gemini API (gemini-pro)
+Send to Gemini API (gemini-1.5-flash)
     ↓
 Get response
     ↓
@@ -79,12 +77,12 @@ Display to user
 ✅ **Conversation History** - Context-aware  
 ✅ **Camera Capture** - Take photos  
 
-## Model Detection
+## Model Selection
 
-The app automatically detects available Gemini models:
-1. Tries `gemini-pro` first (for text)
-2. Falls back to `gemini-1.5-flash` if needed
-3. Uses `gemini-1.5-flash` for vision (images)
+The app uses `gemini-1.5-flash` for both text and vision:
+- Fast, reliable responses
+- Multimodal support (text + images)
+- Note: `gemini-pro` was deprecated and replaced
 
 ## No Configuration Needed
 
@@ -132,14 +130,13 @@ The app is running at: **http://localhost:5001**
 - ✅ Simple API
 
 ### What You Get
-- **gemini-pro**: Fast text responses
-- **gemini-1.5-flash**: Vision analysis
-- Both use your API key: `AIzaSyCnIzEvA2p1NBicc2rb_drzIr2k1M-6HkQ`
+- **gemini-1.5-flash**: Fast text and vision analysis
+- Both use your API key: `AIzaSyD6RTduliVvqtOmJP04dEH2h2LqhvnHxGE`
 
 ## File Changes
 
 ### Modified
-1. ✅ `app.py` - Complete rewrite (95 lines, simple)
+1. ✅ `app.py` - Complete rewrite with improved error handling
 2. ✅ `requirements.txt` - Only 3 dependencies
 3. ✅ `templates/index.html` - Removed API key inputs
 4. ✅ `README.md` - Updated documentation
