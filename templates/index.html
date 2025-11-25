@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        /* --- THEME VARIABLES --- */
+        :root {
+            --primary-color: #009688; --primary-color-light: #e0f2f1;
+            --app-bg: #ffffff; --border-color: #f0f0f0; --text-primary: #1a1a1a;
+            --text-secondary: #777777; --text-input-bg: #f3f3f3; --assistant-bubble-bg: #f0f8ff;
+            --user-bubble-bg: #fdf5e6; --modal-bg: rgba(0,0,0,0.4); --shadow-color: rgba(0,0,0,0.1);
+        }
+        body.dark-mode {
+            --app-bg: #1e1e1e; --border-color: #333333; --text-primary: #e0e0e0;
+            --text-secondary: #aaaaaa; --text-input-bg: #2c2c2c; --assistant-bubble-bg: #2a394d;
+            --user-bubble-bg: #423b2e; --modal-bg: rgba(0,0,0,0.6); --shadow-color: rgba(0,0,0,0.4);
+        }
+
+        /* --- BASE & LAYOUT --- */
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #e9ebee; height: 100vh; display: flex; justify-content: center; align-items: center; transition: background-color 0.3s; }
+        body.dark-mode { background: #121212; }
+        .app { width: 380px; height: 95vh; max-height: 750px; border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; background: var(--app-bg); box-shadow: 0 10px 40px var(--shadow-color); transition: background-color 0.3s, border-color 0.3s; }
+        .header { padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; transition: border-color 0.3s; }
+        .header .title { font-weight: 600; font-size: 18px; color: var(--text-primary); }
+        .header .icons { display: flex; gap: 15px; font-size: 20px; color: var(--text-secondary); }
+        .header .icons .icon { cursor: pointer; transition: color 0.2s; } .header .icons .icon:hover { color: var(--primary-color); }
+        .main { flex: 1; padding: 15px; overflow-y: auto; background-image: linear-gradient(rgba(128,128,128,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,0.08) 1px, transparent 1px); background-size: 40px 40px; display: flex; flex-direction: column; }
+        .input-bar { border-top: 1px solid var(--border-color); padding: 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; transition: border-color 0.3s; }
+        #text-input { flex: 1; padding: 12px 16px; border: none; outline: none; border-radius: 22px; background: var(--text-input-bg); font-size: 15px; color: var(--text-primary); transition: background-color 0.3s; }
+        .icon-button { border: none; background: var(--primary-color); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; }
+        
+        /* --- CHAT BUBBLES & INDICATORS --- */
+        #empty-chat-placeholder { flex-grow: 1; display: flex; justify-content: center; align-items: center; font-size: 45px; color: #d0e0f0; opacity: 0.8; transition: color 0.3s; }
+        body.dark-mode #empty-chat-placeholder { color: #3a4a5a; }
+        #message-container { display: flex; flex-direction: column; gap: 12px; }
+        @keyframes slide-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-bubble { padding: 10px 16px; border-radius: 18px; max-width: 85%; word-wrap: break-word; line-height: 1.5; color: var(--text-primary); animation: slide-in 0.3s ease; }
+        .user { background-color: var(--user-bubble-bg); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .user img { max-width: 100%; border-radius: 10px; margin-top: 8px; }
+        .assistant { background-color: var(--assistant-bubble-bg); align-self: flex-start; border-bottom-left-radius: 4px; }
+        #thinking-indicator { display: none; align-self: flex-start; }
+        @keyframes typing-dot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .typing-dot { display: inline-block; width: 6px; height: 6px; background-color: var(--text-secondary); border-radius: 50%; margin: 0 1px; animation: typing-dot 1.2s infinite ease-in-out; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; } .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        /* --- MODALS --- */
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 100; transition: opacity 0.2s ease; animation: fade-in 0.3s; }
+        .modal.hidden { display: none; }
+        .modal-content { background: var(--app-bg); padding: 25px; border-radius: 10px; text-align: center; width: 320px; box-shadow: 0 5px 15px var(--shadow-color); color: var(--text-primary); }
+        .modal-content input { width: 90%; padding: 10px; margin-top: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--text-input-bg); color: var(--text-primary); }
+        .modal-content button { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 15px; cursor: pointer; }
+        .modal-content .choice-btn { margin: 5px; }
+        .modal-content .tone-btn { display: inline-block; width: 120px; text-align: center; margin: 5px; cursor: pointer; background: var(--text-input-bg); padding: 10px; border-radius: 8px; border: 2px solid transparent; transition: border-color 0.2s, background-color 0.2s; }
+        .modal-content .tone-btn.selected { border-color: var(--primary-color); background: var(--primary-color-light); }
+        .tone-btn .emoji { font-size: 28px; } .tone-btn .label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+        .tone-btn .description { font-size: 11px; color: var(--text-secondary); margin-top: 4px; height: 30px; }
+        #camera-view { max-width: 100%; border-radius: 8px; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 150, 136, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(0, 150, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 150, 136, 0); } }
+        .listening { animation: pulse 1.5s infinite; }
+        .visualizer-container { display: flex; justify-content: center; align-items: center; height: 40px; gap: 4px; margin: 5px auto; }
+        .visualizer-bar { width: 5px; height: 100%; background-color: var(--primary-color); border-radius: 4px; animation: wave 1.2s infinite ease-in-out; transform-origin: bottom; }
+        .visualizer-bar:nth-child(1){animation-delay:0.1s} .visualizer-bar:nth-child(2){animation-delay:0.3s} .visualizer-bar:nth-child(3){animation-delay:0.2s}
+        @keyframes wave { 0%, 100% { transform: scaleY(0.1); } 50% { transform: scaleY(1); } }
+    </style>
+</head>
+<body>
+    <!-- Modals -->
+    <div id="welcome-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Welcome to Assistant</h3>
+            <p>Please set your API keys in the settings menu (⚙️) to begin.</p>
+            <button id="close-welcome-btn">Got it</button>
+        </div>
+    </div>
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Settings</h3>
+            <input type="password" id="openai-key-input" placeholder="OpenAI Key (sk-...)">
+            <input type="password" id="gemini-key-input" placeholder="Google Gemini Key">
+            <button id="save-api-key-btn">Save Keys</button>
+            <button id="clear-history-btn" style="background-color: #aa4a44;">Clear History</button>
+            <button id="close-settings-btn">Close</button>
+        </div>
+    </div>
+    <div id="vision-choice-modal" class="modal hidden"> <!-- ... unchanged ... --> </div>
+    <div id="camera-modal" class="modal hidden"> <!-- ... unchanged ... --> </div>
+    <div id="tone-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Choose a Tone</h3>
+            <div>
+                <div class="tone-btn" data-tone="friendly"><div class="emoji">😊</div><div class="label">Friendly</div><div class="description">Casual, warm, and approachable.</div></div>
+                <div class="tone-btn" data-tone="professional"><div class="emoji">👔</div><div class="label">Professional</div><div class="description">Formal, structured, and precise.</div></div>
+            </div>
+            <div>
+                <div class="tone-btn" data-tone="creative"><div class="emoji">🎨</div><div class="label">Creative</div><div class="description">Imaginative, witty, and expressive.</div></div>
+                <div class="tone-btn" data-tone="concise"><div class="emoji">⚡️</div><div class="label">Concise</div><div class="description">Direct, brief, and to-the-point.</div></div>
+            </div>
+            <button id="close-tone-modal-btn">Close</button>
+        </div>
+    </div>
+    <input type="file" id="file-upload-input" style="display: none;" accept="image/*,application/pdf">
+
+    <!-- Main App UI -->
+    <div class="app">
+        <div class="header">
+            <div class="title">Assistant</div>
+            <div class="icons">
+                <div class="icon" id="new-chat-icon">＋</div>
+                <div class="icon" id="tone-icon">😊</div>
+                <div class="icon" id="theme-toggle-icon">☀️</div>
+                <div class="icon" id="settings-icon">⚙️</div>
+            </div>
+        </div>
+        <div class="main" id="chat-window">
+            <div id="empty-chat-placeholder">🌐</div>
+            <div id="message-container"></div>
+            <div id="visualizer-placeholder"></div>
+            <div id="thinking-indicator" class="chat-bubble assistant">
+                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+            </div>
+        </div>
+        <div class="input-bar">
+            <input type="text" id="text-input" placeholder="Ask anything..." />
+            <button id="attachment-button" class="icon-button">📎</button>
+            <button id="mic-button" class="icon-button">🎤</button>
+        </div>
+    </div>
+
+    <!-- Hidden elements for modals -->
+    <div id="vision-choice-modal" class="modal hidden"> <div class="modal-content"> <h3>Vision Input</h3> <button id="take-photo-btn" class="choice-btn">📷 Take Photo</button> <button id="upload-file-btn" class="choice-btn">📄 Upload File</button> <button id="close-vision-choice-btn">Cancel</button> </div> </div> <div id="camera-modal" class="modal hidden"> <div class="modal-content"> <video id="camera-view" autoplay></video> <button id="capture-btn">Capture</button> <button id="close-camera-btn">Close</button> </div> </div>
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('text-input'), micButton = document.getElementById('mic-button'), attachmentButton = document.getElementById('attachment-button');
+        const msgContainer = document.getElementById('message-container'), chatWindow = document.getElementById('chat-window'), vizPlaceholder = document.getElementById('visualizer-placeholder'), emptyPlaceholder = document.getElementById('empty-chat-placeholder'), thinkingIndicator = document.getElementById('thinking-indicator');
+        const settingsModal = document.getElementById('settings-modal'), openaiKeyInput = document.getElementById('openai-key-input'), geminiKeyInput = document.getElementById('gemini-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn'), closeSettingsBtn = document.getElementById('close-settings-btn'), welcomeModal = document.getElementById('welcome-modal'), closeWelcomeBtn = document.getElementById('close-welcome-btn'), clearHistoryBtn = document.getElementById('clear-history-btn');
+        const visionChoiceModal = document.getElementById('vision-choice-modal'), takePhotoBtn = document.getElementById('take-photo-btn'), uploadFileBtn = document.getElementById('upload-file-btn'), closeVisionChoiceBtn = document.getElementById('close-vision-choice-btn'), fileUploadInput = document.getElementById('file-upload-input');
+        const cameraModal = document.getElementById('camera-modal'), cameraView = document.getElementById('camera-view'), captureBtn = document.getElementById('capture-btn'), closeCameraBtn = document.getElementById('close-camera-btn');
+        const toneIcon = document.getElementById('tone-icon'), toneModal = document.getElementById('tone-modal'), toneButtons = document.querySelectorAll('.tone-btn'), closeToneModalBtn = document.getElementById('close-tone-modal-btn');
+        const newChatIcon = document.getElementById('new-chat-icon'), settingsIcon = document.getElementById('settings-icon'), themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        // State
+        let mediaRecorder, audioChunks = [], conversationHistory = [], cameraStream;
+        let openaiApiKey = localStorage.getItem('openai_api_key'), geminiApiKey = localStorage.getItem('gemini_api_key');
+        let currentTone = localStorage.getItem('assistant_tone') || 'friendly';
+        let currentTheme = localStorage.getItem('assistant_theme') || 'light';
+        
+        // --- Initialization ---
+        function initializeApp() {
+            // Theme
+            document.body.className = currentTheme === 'dark' ? 'dark-mode' : '';
+            themeToggleIcon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            // Tone
+            updateToneUI();
+            // API Keys
+            if (!openaiApiKey || !geminiApiKey) { welcomeModal.classList.remove('hidden'); }
+        }
+
+        // --- Event Listeners ---
+        // Header Icons
+        newChatIcon.onclick = startNewChat;
+        settingsIcon.onclick = openSettings;
+        themeToggleIcon.onclick = toggleTheme;
+        toneIcon.onclick = () => toneModal.classList.remove('hidden');
+        
+        // Modals
+        closeWelcomeBtn.onclick = () => welcomeModal.classList.add('hidden');
+        saveApiKeyBtn.onclick = saveApiKeys;
+        closeSettingsBtn.onclick = () => settingsModal.classList.add('hidden');
+        clearHistoryBtn.onclick = () => { if (confirm('Are you sure you want to clear the conversation?')) { startNewChat(); settingsModal.classList.add('hidden'); }};
+        closeToneModalBtn.onclick = () => toneModal.classList.add('hidden');
+        toneButtons.forEach(button => { button.onclick = () => { currentTone = button.dataset.tone; localStorage.setItem('assistant_tone', currentTone); updateToneUI(); toneModal.classList.add('hidden'); }; });
+        
+        // Input Bar
+        textInput.onkeydown = e => { if (e.key === 'Enter' && textInput.value.trim()) { processChat({ text: textInput.value.trim() }); textInput.value = ''; } };
+        micButton.onclick = () => { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); else startRecording(); };
+        
+        // Vision Flow
+        attachmentButton.onclick = () => visionChoiceModal.classList.remove('hidden');
+        closeVisionChoiceBtn.onclick = () => visionChoiceModal.classList.add('hidden');
+        uploadFileBtn.onclick = () => fileUploadInput.click();
+        fileUploadInput.onchange = (e) => { if (e.target.files.length) { processVision(e.target.files[0]); visionChoiceModal.classList.add('hidden'); } };
+        takePhotoBtn.onclick = startCamera;
+        closeCameraBtn.onclick = stopCamera;
+        captureBtn.onclick = capturePhoto;
+        
+        // --- Feature Functions ---
+        function startNewChat() { conversationHistory = []; msgContainer.innerHTML = ''; emptyPlaceholder.style.display = 'flex'; }
+        
+        function openSettings() {
+            openaiKeyInput.value = openaiApiKey || '';
+            geminiKeyInput.value = geminiApiKey || '';
+            settingsModal.classList.remove('hidden');
+        }
+
+        function saveApiKeys() {
+            const oaiKey = openaiKeyInput.value.trim(); const gemKey = geminiKeyInput.value.trim();
+            if (oaiKey && gemKey) { localStorage.setItem('openai_api_key', oaiKey); localStorage.setItem('gemini_api_key', gemKey); openaiApiKey = oaiKey; geminiApiKey = gemKey; settingsModal.classList.add('hidden'); } 
+            else { alert("Please enter both API keys."); }
+        }
+
+        function toggleTheme() {
+            currentTheme = document.body.classList.toggle('dark-mode') ? 'dark' : 'light';
+            themeToggleIcon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('assistant_theme', currentTheme);
+        }
+
+        function updateToneUI() {
+            const toneEmojis = { friendly: '😊', professional: '👔', creative: '🎨', concise: '⚡️' };
+            toneIcon.textContent = toneEmojis[currentTone];
+            toneButtons.forEach(btn => btn.classList.toggle('selected', btn.dataset.tone === currentTone));
+        }
+
+        async function processChat(data) {
+            if (!openaiApiKey || !geminiApiKey) { alert("Please set API keys in Settings."); return; }
+            emptyPlaceholder.style.display = 'none';
+            if (data.text) addMessage(data.text, 'user');
+            thinkingIndicator.style.display = 'flex';
+            const formData = new FormData();
+            formData.append('apiKey', openaiApiKey);
+            formData.append('conversationHistory', JSON.stringify(conversationHistory));
+            formData.append('tone', currentTone);
+            if (data.audioBlob) formData.append('audio', data.audioBlob);
+            if (data.text) formData.append('text', data.text);
+            try {
+                const res = await fetch('/process-chat', { method: 'POST', body: formData });
+                if (!res.ok) throw new Error(`Server error: ${res.statusText}`);
+                const result = await res.json();
+                if (data.audioBlob) addMessage(result.user_prompt, 'user');
+                conversationHistory.push({ role: 'user', content: result.user_prompt }, { role: 'assistant', content: result.assistant_response });
+                addMessage(result.assistant_response, 'assistant');
+                playAudioWithVisualizer(result.assistant_audio_b64);
+            } catch (err) { addMessage(`Error: ${err.message}`, 'assistant'); }
+            finally { thinkingIndicator.style.display = 'none'; }
+        }
+        
+        async function processVision(file) {
+            if (!openaiApiKey || !geminiApiKey) { alert("Please set API keys in Settings."); return; }
+            emptyPlaceholder.style.display = 'none';
+            addMessage({ file }, 'user');
+            thinkingIndicator.style.display = 'flex';
+            const formData = new FormData();
+            formData.append('openaiApiKey', openaiApiKey);
+            formData.append('geminiApiKey', geminiApiKey);
+            formData.append('file', file);
+            formData.append('tone', currentTone);
+            try {
+                const res = await fetch('/process-vision', { method: 'POST', body: formData });
+                if (!res.ok) { const errorData = await res.json(); throw new Error(errorData.error || `Server error: ${res.statusText}`); }
+                const result = await res.json();
+                conversationHistory.push({ role: 'user', content: `[Sent a file]` }, { role: 'assistant', content: result.assistant_response });
+                addMessage(result.assistant_response, 'assistant');
+                playAudioWithVisualizer(result.assistant_audio_b64);
+            } catch (err) { addMessage(`Vision Error: ${err.message}`, 'assistant'); }
+            finally { thinkingIndicator.style.display = 'none'; }
+        }
+        
+        function addMessage(content, role) { /* ... unchanged ... */ }
+        function playAudioWithVisualizer(audioB64) { /* ... unchanged ... */ }
+        async function startRecording() { /* ... unchanged ... */ }
+        async function startCamera() { /* ... unchanged ... */ }
+        function stopCamera() { /* ... unchanged ... */ }
+        function capturePhoto() { /* ... unchanged ... */ }
+
+        // --- Unchanged Functions (for brevity & clarity) ---
+        function addMessage(content, role) { const bubble = document.createElement('div'); bubble.classList.add('chat-bubble', role); if (typeof content === 'string') { bubble.textContent = content; } else if (content.file) { const fileName = content.file.name ? `Analyzing: ${content.file.name.substring(0, 25)}...` : "Analyzing captured image..."; bubble.textContent = fileName; if (content.file.type.startsWith('image/')) { const img = document.createElement('img'); img.src = URL.createObjectURL(content.file); bubble.appendChild(img); } } msgContainer.appendChild(bubble); chatWindow.scrollTop = chatWindow.scrollHeight; }
+        function playAudioWithVisualizer(audioB64) { vizPlaceholder.innerHTML = `<div class="visualizer-container"><div class="visualizer-bar"></div><div class="visualizer-bar"></div><div class="visualizer-bar"></div></div><audio autoplay src="data:audio/mp3;base64,${audioB64}"></audio>`; setTimeout(() => { vizPlaceholder.innerHTML = ''; }, 8000); }
+        async function startRecording() { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.start(); micButton.classList.add('listening'); mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { micButton.classList.remove('listening'); processChat({ audioBlob: new Blob(audioChunks, { type: 'audio/wav' }) }); }; } catch (err) { console.error("Mic error:", err); alert("Microphone access required."); } }
+        async function startCamera() { try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: true }); cameraView.srcObject = cameraStream; visionChoiceModal.classList.add('hidden'); cameraModal.classList.remove('hidden'); } catch (err) { console.error("Camera error:", err); alert("Camera access required."); } }
+        function stopCamera() { if (cameraStream) cameraStream.getTracks().forEach(track => track.stop()); cameraModal.classList.add('hidden'); }
+        function capturePhoto() { const canvas = document.createElement('canvas'); canvas.width = cameraView.videoWidth; canvas.height = cameraView.videoHeight; canvas.getContext('2d').drawImage(cameraView, 0, 0); stopCamera(); canvas.toBlob(blob => { const file = new File([blob], "capture.jpg", { type: "image/jpeg" }); processVision(file); }, 'image/jpeg'); }
+
+        // --- Run on page load ---
+        initializeApp();
+    </script>
+</body>
+</html>

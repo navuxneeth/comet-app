@@ -1,0 +1,5 @@
+Flask
+openai
+google-generativeai
+pypdfium2
+Pillow
